@@ -1,5 +1,6 @@
 package com.niraj.medzone.network
 
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -40,9 +41,10 @@ fun makePostBody(post: Post) : RequestBody {
         jsonObject.addProperty("UserName", post.UserName)
         jsonObject.addProperty("Relief", post.Relief)
         jsonObject.addProperty("Age", post.Age)
-        jsonObject.addProperty("Number", post.Contact)
+        jsonObject.addProperty("Contact", post.Contact)
         jsonObject.addProperty("Address", post.Address)
         jsonObject.addProperty("Description", post.Description)
+        jsonObject.addProperty("Gender", post.Gender)
         val symptomsArray = JsonArray()
         post.Symptoms.forEach {
                 symptomsArray.add(it)
@@ -50,6 +52,8 @@ fun makePostBody(post: Post) : RequestBody {
         jsonObject.add("Symptoms", symptomsArray)
         val gson = Gson()
         val jsonString = gson.toJson(jsonObject)
+        Log.d("JSON", jsonString)
+
         val requestBody = jsonString.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         return requestBody
 }

@@ -10,7 +10,6 @@ data class Post(
     var Gender: String,
     val Contact: String,
     val Relief: Int,
-
     val Matched: Int,
     val Distance: Double,
 )

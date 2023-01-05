@@ -1,32 +1,35 @@
 package com.niraj.medzone.viewModel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.niraj.medzone.data.Post
+import com.niraj.medzone.data.userPosts
 import com.niraj.medzone.network.ApiService
-import com.niraj.medzone.network.makeFindBody
 import com.niraj.medzone.network.makePostBody
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.ResponseBody
-import retrofit2.Call
 
 
 class mainViewModel : ViewModel() {
 
-    fun List<String>.toQueryValue() = joinToString(separator = "&") { "array=$it" }
+    var postList: userPosts by mutableStateOf(userPosts(Post = mutableListOf()))
+    var loaded = MutableLiveData<Boolean>(false)
+    lateinit var lifeCycleOwner : LifecycleOwner
 
     fun getPosts(Symptoms : List<String>, Address : String){
         viewModelScope.launch {
 
-
             val apiService = ApiService.getInstance()
-
+            loaded.value = false
             try {
-                val ret = apiService.check(Symptoms, "Bhopal, Madhya Pradesh")
-                Log.d("JSON", ret.Post[0].DoctorName)
+                postList = apiService.getDoctors(Symptoms, Address)
+                Log.d("JSON", postList.Post[0].DoctorName)
+                loaded.value = true
             }
             catch (e: Exception){
                 Log.d("JSON", e.toString())
@@ -37,8 +40,8 @@ class mainViewModel : ViewModel() {
 
     fun writePost(post: Post){
         viewModelScope.launch {
+            Log.d("JSON", "Start")
             val jsonRequestBody = makePostBody(post)
-
             val apiService = ApiService.getInstance()
             try {
                 apiService.postDoctors(jsonRequestBody)

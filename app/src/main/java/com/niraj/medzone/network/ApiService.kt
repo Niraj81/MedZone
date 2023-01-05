@@ -21,14 +21,10 @@ interface ApiService {
 //    suspend fun getDoctors(@Body sympRequest: RequestBody) : userPosts
 
 
-    @GET("doctors/get")
-    suspend fun getDoctors(
-        @Query("array", encoded = true) Symptoms : String,
-        @Query("string") Location : String
-    ) : userPosts
+
 
     @GET("doctors/get")
-    suspend fun check(
+    suspend fun getDoctors(
         @Query("array", encoded = true) Symptoms : List<String>,
         @Query("string") Location : String
     ) : userPosts

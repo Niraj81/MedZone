@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -34,41 +37,53 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.MedZoneTheme
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.niraj.medzone.UIComponents.PostCard
 import com.niraj.medzone.data.Post
 import com.niraj.medzone.data.rememberPostState
+import com.niraj.medzone.destinations.FindScreenDestination
+import com.niraj.medzone.destinations.PostScreenDestination
+import com.niraj.medzone.destinations.WritePostScreenDestination
 import com.niraj.medzone.ui.theme.montserratFamily
+import com.niraj.medzone.utils.stringToList
 import com.niraj.medzone.viewModel.mainViewModel
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.NavGraph
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: mainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val mainViewModel = ViewModelProvider(this).get(mainViewModel::class.java)
+//        val mainViewModel = ViewModelProvider(this).get(mainViewModel::class.java)
+        viewModel.lifeCycleOwner = this
         setContent {
             MedZoneTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background) {
-//                        MainScreen()
-                      FindScreen(mainViewModel)
-//                      WritePostScreen()
-//                    PostScreen()
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    DestinationsNavHost(navGraph = NavGraphs.root)
                 }
             }
         }
     }
 }
 
-@Preview()
-//@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Destination(start = true)
 @Composable
-fun MainScreen(){
+fun MainScreen(
+    navigator: DestinationsNavigator
+//    mainViewModel: mainViewModel = viewModel()
+){
+
     Surface (
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -125,7 +140,9 @@ fun MainScreen(){
             )
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    navigator.navigate(FindScreenDestination())
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.4f)
                     .shadow(
@@ -134,7 +151,7 @@ fun MainScreen(){
                         shape = RoundedCornerShape(corner = CornerSize(50.dp))
                     ),
 
-            ) {
+                ) {
                 Text(
                     text = "Get Started",
                     fontFamily = montserratFamily,
@@ -143,7 +160,7 @@ fun MainScreen(){
                 )
             }
             Button(
-                onClick = { /*TODO*/ },
+                onClick = { navigator.navigate(WritePostScreenDestination()) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.onBackground
@@ -160,10 +177,15 @@ fun MainScreen(){
     }
 }
 
+
+@Destination
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun WritePostScreen(){
+fun WritePostScreen(
+    navigator: DestinationsNavigator,
+){
+    val mainViewModel: mainViewModel = viewModel()
+
     Surface (
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -172,16 +194,14 @@ fun WritePostScreen(){
     ){
         val localFocusManager = LocalFocusManager.current
 
-
-
         val post = rememberPostState(UserName = "",
             DoctorName = "",
-            Symptoms = listOf(),
+            Symptoms = mutableListOf(),
             Description = "",
             Age = 0,
             Address = "",
             Gender = "",
-            Number = "",
+            Contact = "",
             Relief = 0f
         )
 
@@ -269,9 +289,8 @@ fun WritePostScreen(){
                     ){
                         TextField(
                             value = post.Symptoms.joinToString(","),
-                            onValueChange = {
-                                post.Symptoms = it.split(",")
-                                Log.d("CC", post.Symptoms.size.toString())
+                            onValueChange = { it ->
+                                post.Symptoms = stringToList(it)
                             },
                             colors = TextFieldDefaults.textFieldColors(
                                 focusedIndicatorColor = Color(0xFFF14351)
@@ -386,9 +405,9 @@ fun WritePostScreen(){
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     TextField(
-                        value = post.Number,
+                        value = post.Contact,
                         onValueChange = {
-                            post.Number = it
+                            post.Contact = it
                         },
                         colors = TextFieldDefaults.textFieldColors(
                             focusedIndicatorColor = Color(0xFFF14351)
@@ -424,7 +443,23 @@ fun WritePostScreen(){
                     )
                     Spacer(modifier = Modifier.height(40.dp))
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            Log.d("JSON", "ONE")
+                            val sPost = Post(
+                                UserName = post.UserName,
+                                DoctorName = post.DoctorName,
+                                Symptoms = post.Symptoms,
+                                Description = post.Description,
+                                Age = post.Age,
+                                Address = post.Address,
+                                Gender = post.Gender,
+                                Contact = post.Contact,
+                                Relief = post.Relief.toInt(),
+                                Matched = 0,
+                                Distance = 0.0
+                            )
+                            mainViewModel.writePost(sPost)
+                        },
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
                             .shadow(
@@ -442,7 +477,7 @@ fun WritePostScreen(){
                         )
                     }
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = { navigator.popBackStack() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
                             contentColor = MaterialTheme.colorScheme.onBackground
@@ -461,9 +496,23 @@ fun WritePostScreen(){
     }
 }
 
-@Preview
+@Destination
 @Composable
-fun PostScreen(){
+fun PostScreen(
+    navigator : DestinationsNavigator
+){
+    val mainViewModel: mainViewModel = viewModel()
+
+    val isLoaded = remember {
+        mutableStateOf(false)
+    }
+    mainViewModel.loaded.observe(LocalLifecycleOwner.current){
+        Log.d("JSON", "Loaded $it")
+        if(it == true){
+            isLoaded.value = true
+        }
+    }
+
     Surface (
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -513,20 +562,25 @@ fun PostScreen(){
                 style = MaterialTheme.typography.labelMedium
             )
             Spacer(modifier = Modifier.height(20.dp))
-            DropDownMenu()
-            Spacer(modifier = Modifier.height(20.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxHeight()
-            ){
-                items(
-                    count = 3
-                ){ item ->
-                    Spacer(modifier = Modifier.height(20.dp))
-                    PostCard(
-                        post = post,
-                        bgColor = colours[item]
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
+            if(!isLoaded.value) {
+                CircularProgressIndicator()
+            }
+            if(isLoaded.value) {
+                DropDownMenu()
+                Spacer(modifier = Modifier.height(20.dp))
+                LazyColumn(
+                    modifier = Modifier.fillMaxHeight()
+                ){
+                    items(
+                        count = mainViewModel.postList.Post.size
+                    ){ item ->
+                        Spacer(modifier = Modifier.height(20.dp))
+                        PostCard(
+                            post = mainViewModel.postList.Post[item],
+                            bgColor = colours[item]
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
                 }
             }
         }
@@ -608,14 +662,14 @@ fun DropDownMenu(){
     }
 }
 
-
+@Destination
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview()
-//@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun FindScreen(
-    mainViewModel: mainViewModel = mainViewModel()
+    navigator : DestinationsNavigator
+
 ){
+    val mainViewModel: mainViewModel = viewModel()
     Surface (
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -699,8 +753,9 @@ fun FindScreen(
             Button(
                 onClick = { /*TODO*/
                     mainViewModel.getPosts(
-                        listOf("eye", "hair"), "Bhopal, Madhya Pradesh"
+                        stringToList(symptoms.value), address.value
                     )
+                    navigator.navigate(PostScreenDestination())
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.4f)
@@ -720,7 +775,9 @@ fun FindScreen(
             }
 
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {
+                          navigator.popBackStack()
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.onBackground

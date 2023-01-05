@@ -11,7 +11,7 @@ class postState (
     Age: Int,
     Address: String,
     Gender: String,
-    Number: String,
+    Contact: String,
     Relief: Float
 ) {
     var UserName by mutableStateOf(UserName)
@@ -21,7 +21,7 @@ class postState (
     var Age by mutableStateOf(Age)
     var Address by mutableStateOf(Address)
     var Gender by mutableStateOf(Gender)
-    var Number by mutableStateOf(Number)
+    var Contact by mutableStateOf(Contact)
     var Relief by mutableStateOf(Relief)
 }
 
@@ -34,7 +34,7 @@ fun rememberPostState(
     Age: Int,
     Address: String,
     Gender: String,
-    Number: String,
+    Contact: String,
     Relief: Float
 ) : postState {
     return remember {
@@ -46,7 +46,7 @@ fun rememberPostState(
             Age = Age,
             Address = Address,
             Gender = Gender,
-            Number = Number,
+            Contact = Contact,
             Relief = Relief
         )
     }

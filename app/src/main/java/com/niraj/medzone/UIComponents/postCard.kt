@@ -44,7 +44,6 @@ fun darkIt(value: Float) : Float {
 @Composable
 fun PostCard(
     post: Post,
-    bgColor: Long,
     modifier: Modifier = Modifier,
 ){
     val descriptionOpen = remember  {
@@ -70,14 +69,13 @@ fun PostCard(
             ),
         color = MaterialTheme.colorScheme.secondary,
     ) {
-
         Column(
             modifier = Modifier.padding(15.dp)
         ) {
             Row {
                 Column() {
                     Text(
-                        "Dr. Rajendra Jaiswal",
+                        post.DoctorName,
                         modifier = Modifier.fillMaxWidth(0.8f),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
@@ -85,7 +83,7 @@ fun PostCard(
                     )
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
-                        text = "Headache, Nausea, Morning Sickness, blah, blah, blah",
+                        text = post.Symptoms.joinToString(),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Light,
                         modifier = Modifier.fillMaxWidth(0.8f)
@@ -126,13 +124,13 @@ fun PostCard(
                 )
                 Spacer(modifier = Modifier.weight(0.01f))
                 Text(
-                    text = post.Distance.toString() + " km away",
+                    text = (post.Distance.toInt()).toString() + " km away",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.weight(0.2f))
                 Text(
-                    text = "~ Niraj Patidar",
+                    text = "~ ${post.UserName}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Light
                 )
@@ -246,7 +244,6 @@ fun ReliefCircle(relief : Int){
                 color = Color.White,
                 radius = 37f,
             )
-
         }
         Text(
             text = "$relief%",
@@ -296,7 +293,7 @@ fun PostPreview() {
                 count = 3
             ){ item->
                 Spacer(modifier = Modifier.height(25.dp))
-                PostCard(post = post, colours[item])
+                PostCard(post = post)
             }
         }
     }

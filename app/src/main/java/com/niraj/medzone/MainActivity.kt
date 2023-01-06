@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.MedZoneTheme
@@ -56,21 +57,25 @@ import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.NavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.dependency
 
 
 class MainActivity : ComponentActivity() {
     private val viewModel: mainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        val mainViewModel = ViewModelProvider(this).get(mainViewModel::class.java)
-        viewModel.lifeCycleOwner = this
+        val mainViewModel = ViewModelProvider(this).get(mainViewModel::class.java)
+        val lifeCycleOwner = this
         setContent {
             MedZoneTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DestinationsNavHost(navGraph = NavGraphs.root)
+                    DestinationsNavHost(navGraph = NavGraphs.root, dependenciesContainerBuilder = {
+                        dependency(mainViewModel)
+                        dependency(lifeCycleOwner)
+                    })
                 }
             }
         }
@@ -80,8 +85,8 @@ class MainActivity : ComponentActivity() {
 @Destination(start = true)
 @Composable
 fun MainScreen(
-    navigator: DestinationsNavigator
-//    mainViewModel: mainViewModel = viewModel()
+    navigator: DestinationsNavigator,
+    mainViewModel: mainViewModel
 ){
 
     Surface (
@@ -183,8 +188,10 @@ fun MainScreen(
 @Composable
 fun WritePostScreen(
     navigator: DestinationsNavigator,
+    mainViewModel: mainViewModel,
+    lifecycleOwner: LifecycleOwner
 ){
-    val mainViewModel: mainViewModel = viewModel()
+
 
     Surface (
         color = MaterialTheme.colorScheme.background,
@@ -454,7 +461,7 @@ fun WritePostScreen(
                                 Address = post.Address,
                                 Gender = post.Gender,
                                 Contact = post.Contact,
-                                Relief = post.Relief.toInt(),
+                                Relief = (post.Relief * 100).toInt(),
                                 Matched = 0,
                                 Distance = 0.0
                             )
@@ -499,18 +506,18 @@ fun WritePostScreen(
 @Destination
 @Composable
 fun PostScreen(
-    navigator : DestinationsNavigator
+    navigator : DestinationsNavigator,
+    mainViewModel: mainViewModel,
+    lifecycleOwner: LifecycleOwner
 ){
-    val mainViewModel: mainViewModel = viewModel()
+
 
     val isLoaded = remember {
         mutableStateOf(false)
     }
-    mainViewModel.loaded.observe(LocalLifecycleOwner.current){
+    mainViewModel.loaded.observe(lifecycleOwner){
         Log.d("JSON", "Loaded $it")
-        if(it == true){
-            isLoaded.value = true
-        }
+        isLoaded.value = it
     }
 
     Surface (
@@ -562,11 +569,13 @@ fun PostScreen(
                 style = MaterialTheme.typography.labelMedium
             )
             Spacer(modifier = Modifier.height(20.dp))
+            DropDownMenu(mainViewModel){
+                isLoaded.value = false
+            }
             if(!isLoaded.value) {
                 CircularProgressIndicator()
             }
             if(isLoaded.value) {
-                DropDownMenu()
                 Spacer(modifier = Modifier.height(20.dp))
                 LazyColumn(
                     modifier = Modifier.fillMaxHeight()
@@ -576,8 +585,7 @@ fun PostScreen(
                     ){ item ->
                         Spacer(modifier = Modifier.height(20.dp))
                         PostCard(
-                            post = mainViewModel.postList.Post[item],
-                            bgColor = colours[item]
+                            post = mainViewModel.postList.Post[item]
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                     }
@@ -587,8 +595,12 @@ fun PostScreen(
     }
 }
 
+
 @Composable
-fun DropDownMenu(){
+fun DropDownMenu(
+    mainViewModel: mainViewModel,
+    refreshLayout: () -> Unit
+){
 
     val isDropDownOpen = remember {
         mutableStateOf(false)
@@ -640,21 +652,33 @@ fun DropDownMenu(){
                 expanded = isDropDownOpen.value,
                 onDismissRequest = {
                     /*TODO : Sort the List*/
-                    isDropDownOpen.value != isDropDownOpen.value
+                    isDropDownOpen.value = !isDropDownOpen.value
                 },
                 modifier = Modifier.width(150.dp)
             ) {
                 DropdownMenuItem(text = { Text(text = "Symptoms") },
                     onClick = {
+                        refreshLayout()
                         currentSelectedItem.value = "Symptoms"
                         isDropDownOpen.value = !isDropDownOpen.value
-                        /*TODO*/
+                        mainViewModel.sortList("Symptoms")
                     }
                 )
                 DropdownMenuItem(text = { Text(text = "Distance") },
                     onClick = { /*TODO*/
+                        refreshLayout()
                         currentSelectedItem.value = "Distance"
                         isDropDownOpen.value = !isDropDownOpen.value
+                        mainViewModel.sortList("Distance")
+
+                    }
+                )
+                DropdownMenuItem(text = { Text(text = "Relief") },
+                    onClick = { /*TODO*/
+                        refreshLayout()
+                        currentSelectedItem.value = "Relief"
+                        isDropDownOpen.value = !isDropDownOpen.value
+                        mainViewModel.sortList("Relief")
                     }
                 )
             }
@@ -666,10 +690,11 @@ fun DropDownMenu(){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindScreen(
-    navigator : DestinationsNavigator
-
+    navigator : DestinationsNavigator,
+    mainViewModel: mainViewModel,
+    lifecycleOwner: LifecycleOwner
 ){
-    val mainViewModel: mainViewModel = viewModel()
+
     Surface (
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -769,14 +794,12 @@ fun FindScreen(
                     text = "Search",
                     fontFamily = montserratFamily,
                     fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
-
             Button(
                 onClick = {
-                          navigator.popBackStack()
+                    navigator.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,

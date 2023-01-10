@@ -545,28 +545,6 @@ fun PostScreen(
             .fillMaxHeight()
             .fillMaxWidth()
     ){
-        val post = Post(
-            Address = "CHL Hospital, New Palasia, Indore, Madhya Pradesh",
-            Age = 20,
-            Description = "Lorel ipsum, dahi bada, mauj masti, Lorel ipsum, dahi bada, mauj masti, Lorel ipsum, dahi bada, mauj masti",
-            Distance = 263.0,
-            DoctorName = "Niraj Jain",
-            Gender = "Male",
-            Matched = 3,
-            Contact = "8827920256",
-            Relief = 70,
-            Symptoms = listOf(
-                "Nausea",
-                "Headache",
-                "Pale Skin"
-            ),
-            UserName = "Niraj Patidar"
-        )
-        val colours = listOf<Long>(
-            0xFFFFEBE5,
-            0xFFfdf1dc,
-            0xFFcfecff
-        )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(top = 20.dp)

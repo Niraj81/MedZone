@@ -6,6 +6,9 @@ fun stringToList(Symptoms : String) : List<String> {
         if(retList[i].startsWith(" ")){
             retList[i] = retList[i].trimStart()
         }
+        if(retList[i].endsWith(" ")){
+            retList[i] = retList[i].trimEnd()
+        }
     }
     return retList
 }

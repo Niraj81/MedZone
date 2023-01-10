@@ -2,6 +2,7 @@ package com.niraj.medzone
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -182,7 +183,6 @@ fun MainScreen(
     }
 }
 
-
 @Destination
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -200,6 +200,7 @@ fun WritePostScreen(
             .fillMaxWidth()
     ){
         val localFocusManager = LocalFocusManager.current
+        val context = LocalContext.current
 
         val post = rememberPostState(UserName = "",
             DoctorName = "",
@@ -211,6 +212,9 @@ fun WritePostScreen(
             Contact = "",
             Relief = 0f
         )
+        val currentSymptom = remember  {
+            mutableStateOf("")
+        }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -295,9 +299,9 @@ fun WritePostScreen(
                         modifier = Modifier.fillMaxWidth(0.8f)
                     ){
                         TextField(
-                            value = post.Symptoms.joinToString(","),
+                            value = currentSymptom.value,
                             onValueChange = { it ->
-                                post.Symptoms = stringToList(it)
+                                currentSymptom.value = it
                             },
                             colors = TextFieldDefaults.textFieldColors(
                                 focusedIndicatorColor = Color(0xFFF14351)
@@ -442,20 +446,12 @@ fun WritePostScreen(
                             Text(text = "Description")
                         },
                         modifier = Modifier.fillMaxWidth(0.8f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = {
-                            localFocusManager.moveFocus(FocusDirection.Next)
-                        })
-                    )
-                    Spacer(modifier = Modifier.height(40.dp))
-                    Button(
-                        onClick = {
-                            Log.d("JSON", "ONE")
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                        keyboardActions = KeyboardActions(onGo = {
                             val sPost = Post(
                                 UserName = post.UserName,
                                 DoctorName = post.DoctorName,
-                                Symptoms = post.Symptoms,
+                                Symptoms = stringToList(currentSymptom.value),
                                 Description = post.Description,
                                 Age = post.Age,
                                 Address = post.Address,
@@ -466,6 +462,29 @@ fun WritePostScreen(
                                 Distance = 0.0
                             )
                             mainViewModel.writePost(sPost)
+                            Toast.makeText(context, "Successfully Saved", Toast.LENGTH_SHORT).show()
+                            localFocusManager.clearFocus()
+                        })
+                    )
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Button(
+                        onClick = {
+                            Log.d("JSON", "ONE")
+                            val sPost = Post(
+                                UserName = post.UserName,
+                                DoctorName = post.DoctorName,
+                                Symptoms = stringToList(currentSymptom.value),
+                                Description = post.Description,
+                                Age = post.Age,
+                                Address = post.Address,
+                                Gender = post.Gender,
+                                Contact = post.Contact,
+                                Relief = (post.Relief * 100).toInt(),
+                                Matched = 0,
+                                Distance = 0.0
+                            )
+                            mainViewModel.writePost(sPost)
+                            Toast.makeText(context, "Successfully Saved", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
@@ -691,8 +710,7 @@ fun DropDownMenu(
 @Composable
 fun FindScreen(
     navigator : DestinationsNavigator,
-    mainViewModel: mainViewModel,
-    lifecycleOwner: LifecycleOwner
+    mainViewModel: mainViewModel
 ){
 
     Surface (
@@ -745,6 +763,7 @@ fun FindScreen(
                 onValueChange = {
                     symptoms.value = it
                 },
+                modifier = Modifier.fillMaxWidth(0.8f),
                 colors = TextFieldDefaults.textFieldColors(
                     focusedIndicatorColor = Color(0xFFF14351)
                 ),
@@ -752,7 +771,7 @@ fun FindScreen(
                     Text(text = "Symptoms")
                 },
                 supportingText = {
-                    Text(text = "Please seperate your symptoms by comma")
+                    Text(text = "Please separate your symptoms by comma")
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -769,10 +788,16 @@ fun FindScreen(
                 colors = TextFieldDefaults.textFieldColors(
                     focusedIndicatorColor = Color(0xFFF14351)
                 ),
+                modifier = Modifier.fillMaxWidth(0.8f),
                 label = { Text(text = "Address")},
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                keyboardActions = KeyboardActions(onGo = { /* TODO: Call the action of search button*/})
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    mainViewModel.getPosts(
+                        stringToList(symptoms.value), address.value
+                    )
+                    navigator.navigate(PostScreenDestination())
+                })
             )
             Spacer(modifier = Modifier.height(20.dp))
             Button(

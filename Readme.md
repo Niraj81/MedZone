@@ -8,7 +8,7 @@ MedZone is a android app through which a user can get nearby doctor's informatio
  
 ## Demo
 
-[![Product Demonstation][product-demo]]
+![Product Demonstation][product-demo]
 
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 

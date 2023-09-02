@@ -22,19 +22,6 @@ fun makeFindBody(Symptoms : List<String>, Address : String) : RequestBody {
         return requestBody
 }
 
-/*
-{
-    "DoctorName" : "Rajesh Jain" ,
-    "UserName": "Manant",
-    "Relief" : 80,
-    "Age": 25,
-    "Gender": "Female" ,
-    "Number" : "7887273737",
-    "Address": "Mumbai, •Maharashtra" ,
-    "Symptomps" : ["hair", "leg","eye"] ,
-    "Description": "kuchbhi"
-}
- */
 fun makePostBody(post: Post) : RequestBody {
         val jsonObject = JsonObject()
         jsonObject.addProperty("DoctorName", post.DoctorName)

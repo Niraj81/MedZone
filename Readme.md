@@ -21,6 +21,12 @@ MedZone is a android app through which a user can get nearby doctor's informatio
 [screenshot-2]: Media/Screenshot2.jpg
 [screenshot-3]: Media/Screenshot3.jpg
 [screenshot-4]: Media/Screenshot4.jpg
+
+### Figma Prototype
+![Figma Prototype][figmaPrototype]
+
+[figmaPrototype]: Media/medzoneFigmaPrototype.png
+
 ## Acknowledgements
 
  - [Icon - Flaticon](https://www.flaticon.com/free-icons/heart)
